@@ -14,7 +14,7 @@ def db_connect():
 
 @app.route('/')
 def home():
-    return "✅ Hello from Flask + EC2 + RDS!"
+    return "Hello from Flask + EC2 + RDS!"
 
 @app.route('/people')
 def show_people():
@@ -26,7 +26,7 @@ def show_people():
         conn.close()
         return render_template("people.html", people=[r[0] for r in rows])
     except Exception as e:
-        return f"❌ Error: {str(e)}"
+        return f"Error: {str(e)}"
 
 @app.route('/health')
 def health():
