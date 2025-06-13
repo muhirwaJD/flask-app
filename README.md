@@ -134,18 +134,15 @@ The app will be available at `http://<your-ec2-public-ip>:3000`
 Add screenshots of your:
 
 * Target Group health checks
-* Load Balancer listener setup
-* EC2 instance running app
+  <img width="1470" alt="image" src="https://github.com/user-attachments/assets/d1ef0d24-c6ac-4c73-a4ef-528b1153e47a" />
 
----
+* Load Balancer listener setup
+ <img width="1470" alt="Screenshot 2025-06-13 at 11 12 53 PM" src="https://github.com/user-attachments/assets/5ee59426-7f24-46b6-844d-82ba10d48df0" />
+ 
 
 ## 📅 Author
 
-Jean de Dieu Muhirwa
+Jd Muhirwa
 
 ---
-
-## ✉️ Contact
-
-For questions or support: \[[your-email@example.com](mailto:your-email@example.com)]
 
