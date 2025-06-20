@@ -208,15 +208,3 @@ Add screenshots of your:
 ## 📅 Author
 
 Jd Muhirwa
-
-\## 👀 Screenshots
-
-Add screenshots of your:
-
-\* Target Group health checks
-
-&#x20; \<img width="1470" alt="image" src="[https://github.com/user-attachments/assets/d1ef0d24-c6ac-4c73-a4ef-528b1153e47a](https://github.com/user-attachments/assets/d1ef0d24-c6ac-4c73-a4ef-528b1153e47a)" />
-
-\* Load Balancer listener setup
-
-&#x20;\<img width="1470" alt="Screenshot 2025-06-13 at 11 12 53 PM" src="[https://github.com/user-attachments/assets/5ee59426-7f24-46b6-844d-82ba10d48df0](https://github.com/user-attachments/assets/5ee59426-7f24-46b6-844d-82ba10d48df0)" />
