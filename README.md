@@ -1,16 +1,20 @@
-# Flask + EC2 + RDS App (LAMP Replacement)
+# Flask + EC2 + RDS App (LAMP Replacement) + NGINX Reverse Proxy + CloudWatch
 
-A Python Flask application hosted on EC2, connected to an RDS MySQL database, and fronted by an AWS Application Load Balancer (ALB). This replaces a traditional LAMP stack with a modern Pythonic setup.
+A Python Flask application hosted on EC2, connected to an RDS MySQL database, fronted by an NGINX reverse proxy **or** an AWS Application Load Balancer (ALB), with monitoring and logging integrated using Amazon CloudWatch. This setup replaces a traditional LAMP stack with a modern, observable Pythonic infrastructure.
 
 ---
 
 ## 📄 Features
 
 * **Visitor Tracker**: Displays a message on `/` and reads names from RDS on `/people`
-* **Health Endpoint**: `/health` returns `200 OK` for load balancer health checks
+* **Health Endpoint**: `/health` returns `200 OK` for ALB/NGINX health checks
 * **Database Integration**: Connects securely to an RDS MySQL instance
-* **Load Balanced**: Deployed behind an Application Load Balancer (ALB)
+* **Reverse Proxy**: NGINX forwards traffic from port 80 to Flask app on port 3000
+* **Load Balanced (Optional)**: Integrated with AWS ALB
 * **Auto Scaling Group**: Automatically scales EC2 instances
+* **CloudWatch Logs**: Collects NGINX access/error logs and Flask logs
+* **CloudWatch Metrics**: Monitors CPU, RAM, and Disk usage
+* **CloudWatch Alarms**: Alerts for high CPU usage and EC2 failures
 
 ---
 
@@ -19,13 +23,27 @@ A Python Flask application hosted on EC2, connected to an RDS MySQL database, an
 ```
 User
   |
+[EC2 Public IP / ALB DNS]
+  |
+NGINX (port 80)
+  |
+Flask App (port 3000)
+  |
+Amazon RDS (MySQL)
+```
+
+OR with ALB:
+
+```
+User
+  |
 ALB (HTTP:80)
   |
 Target Group (port 80)
   |
-Auto Scaling Group
+NGINX (Reverse Proxy on EC2)
   |
-EC2 Instance(s) (Flask App running on port 3000)
+Flask App (port 3000)
   |
 Amazon RDS (MySQL)
 ```
@@ -34,17 +52,17 @@ Amazon RDS (MySQL)
 
 ## 🔄 Endpoints
 
-| Route     | Description                        |
-| --------- | ---------------------------------- |
-| `/`       | Displays welcome message           |
-| `/people` | Reads visitor names from MySQL     |
-| `/health` | Used for ALB health check (200 OK) |
+| Route     | Description                    |
+| --------- | ------------------------------ |
+| `/`       | Displays welcome message       |
+| `/people` | Reads visitor names from MySQL |
+| `/health` | Used for health check (200 OK) |
 
 ---
 
 ## 🌐 Public App URL
 
-[http://flask-alb-1147350152.eu-west-1.elb.amazonaws.com](http://flask-alb-1147350152.eu-west-1.elb.amazonaws.com)
+[http://flask-alb-1147350152.eu-west-1.elb.amazonaws.com](http://flask-alb-1147350152.eu-west-1.elb.amazonaws.com) OR `http://<EC2-IP>`
 
 ---
 
@@ -90,33 +108,78 @@ python app.py
 
 The app will be available at `http://<your-ec2-public-ip>:3000`
 
+### 6. Set Up NGINX Reverse Proxy
+
+Configure `/etc/nginx/nginx.conf`:
+
+```nginx
+server {
+    listen 80;
+    server_name _;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+```
+
+Restart NGINX:
+
+```bash
+sudo systemctl restart nginx
+```
+
+### 7. Register Flask as a Service (optional)
+
+```bash
+sudo nano /etc/systemd/system/flaskapp.service
+```
+
+```ini
+[Unit]
+Description=Flask Application
+After=network.target
+
+[Service]
+User=ec2-user
+WorkingDirectory=/home/ec2-user/lamp-stack
+ExecStart=/usr/bin/python3 app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+sudo systemctl daemon-reexec
+sudo systemctl start flaskapp
+sudo systemctl enable flaskapp
+```
+
 ---
 
-## 🌟 AWS Deployment Summary
+## ☁️ CloudWatch Monitoring & Logging
 
-* **EC2 Instance**:
+### ✅ CloudWatch Agent Configured to Collect:
 
-  * Ubuntu or Amazon Linux 2
-  * Flask app runs on port `3000`
-  * Security Group: allows port `3000` from ALB only
+* CPU, RAM, Disk usage
+* NGINX access & error logs
+* Flask app logs
 
-* **RDS (MySQL)**:
+### 📤 Log Groups
 
-  * DB name: `testdb`
-  * Multi-AZ option enabled (for HA)
-  * Security Group: allows port `3306` from EC2 SG only
+* `nginx-access-log`
+* `nginx-error-log`
+* `flask-app-log`
 
-* **Application Load Balancer**:
+### 🔔 Alarms
 
-  * Listener: `HTTP:80`
-  * Target Group: forwards to port `80`
-  * Health Check: `/health`
-
-* **Auto Scaling Group**:
-
-  * Desired capacity: 1
-  * Scaling policies (optional)
-  * Lifecycle hook integrated with SNS (optional)
+* `CPUUsage > 80%`
+* `EC2 StatusCheckFailed > 0`
+* Notifications sent via SNS (email subscription confirmed)
 
 ---
 
@@ -126,6 +189,7 @@ The app will be available at `http://<your-ec2-public-ip>:3000`
 * CI/CD pipeline for automated deployments
 * Store secrets in AWS Systems Manager (SSM) or Secrets Manager
 * Add HTTPS via ACM + ALB SSL listener
+* Set up Fluent Bit or FireLens for enhanced logging
 
 ---
 
@@ -135,17 +199,12 @@ Add screenshots of your:
 
 * Target Group health checks
 * Load Balancer listener setup
-* EC2 instance running app
+* NGINX Logs in CloudWatch
+* CloudWatch metrics dashboard
+* CloudWatch Alarms (CPU and EC2 Status Check)
 
 ---
 
 ## 📅 Author
 
-Jean de Dieu Muhirwa
-
----
-
-## ✉️ Contact
-
-For questions or support: \[[your-email@example.com](mailto:your-email@example.com)]
-
+Jd Muhirwa
